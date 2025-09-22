@@ -118,7 +118,7 @@ macro_rules! impl_for_timer {
 macro_rules! pwm_half {
     ($StructName:ident, $timer:path, $en_bit:expr, $ilr:ident, $matchr:ident) => {
         /// One half of a PWM timer
-        impl embedded_hal::Pwm for $StructName<$timer> {
+        impl crate::hal::Pwm for $StructName<$timer> {
             type Channel = ();
             type Time = u32; // clock cycles, proper abstraction tbd
             type Duty = u32; // also clock cycles

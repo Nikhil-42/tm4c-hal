@@ -2,7 +2,7 @@
 
 use crate::{sysctl::Clocks, time::Hertz};
 use cortex_m::peripheral::{syst::SystClkSource, SYST};
-use embedded_hal::blocking::delay::{DelayMs, DelayUs};
+use embedded_hal::delay::DelayNs;
 
 /// System timer (SysTick) as a delay provider
 pub struct Delay {
@@ -27,39 +27,11 @@ impl Delay {
     }
 }
 
-impl DelayMs<u32> for Delay {
-    fn delay_ms(&mut self, ms: u32) {
-        self.delay_us(ms * 1_000);
-    }
-}
+impl DelayNs for Delay {
+    fn delay_ns(&mut self, ns: u32) {
+        // * : u32 x u32 => u64, so do the multiplication in u64 to avoid overflow
+        let rvr: u32 = (((ns as u64) * (self.sysclk.0 as u64)) / 1_000_000_000) as u32;
 
-impl DelayMs<u16> for Delay {
-    fn delay_ms(&mut self, ms: u16) {
-        self.delay_ms(cast::u32(ms));
-    }
-}
-
-impl DelayMs<u8> for Delay {
-    fn delay_ms(&mut self, ms: u8) {
-        self.delay_ms(cast::u32(ms));
-    }
-}
-
-impl DelayUs<u32> for Delay {
-    fn delay_us(&mut self, us: u32) {
-        // Tricky to get this to not overflow
-        let mut rvr = us * (self.sysclk.0 / 1_000_000);
-        rvr += (us * ((self.sysclk.0 % 1_000_000) / 1_000)) / 1_000;
-        rvr += (us * (self.sysclk.0 % 1_000)) / 1_000_000;
-
-        while rvr >= 1 << 24 {
-            self.syst.set_reload((1 << 24) - 1);
-            self.syst.clear_current();
-            self.syst.enable_counter();
-            while !self.syst.has_wrapped() {}
-            self.syst.disable_counter();
-            rvr -= 1 << 24;
-        }
 
         assert!(rvr < (1 << 24));
         self.syst.set_reload(rvr);
@@ -67,17 +39,5 @@ impl DelayUs<u32> for Delay {
         self.syst.enable_counter();
         while !self.syst.has_wrapped() {}
         self.syst.disable_counter();
-    }
-}
-
-impl DelayUs<u16> for Delay {
-    fn delay_us(&mut self, us: u16) {
-        self.delay_us(cast::u32(us))
-    }
-}
-
-impl DelayUs<u8> for Delay {
-    fn delay_us(&mut self, us: u8) {
-        self.delay_us(cast::u32(us))
     }
 }

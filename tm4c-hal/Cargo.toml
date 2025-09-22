@@ -20,8 +20,7 @@ cortex-m = "0.7"
 nb = "1"
 
 [dependencies.embedded-hal]
-version = "0.2.2"
-features = ["unproven"]
+version = "1.0.0"
 
 [dependencies.cast]
 version = "0.2.2"

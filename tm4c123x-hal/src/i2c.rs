@@ -2,7 +2,6 @@
 
 use crate::{
     gpio::*,
-    hal::blocking::i2c::{Read, Write, WriteRead},
     sysctl::{self, Clocks},
     time::Hertz,
     Sealed,
@@ -10,14 +9,14 @@ use crate::{
 
 use cortex_m::asm::delay;
 use tm4c123x::{I2C0, I2C1, I2C2, I2C3};
+use embedded_hal::i2c::{ErrorKind, ErrorType, NoAcknowledgeSource, I2c, Operation, SevenBitAddress};
 
-pub use tm4c_hal::i2c::Error;
 use tm4c_hal::{i2c_busy_wait, i2c_hal, i2c_pins};
 
 /// I2C peripheral operating in master mode
-pub struct I2c<I2C, PINS> {
+pub struct I2C<I2Cx, PINS> {
     /// Underlying I2C peripheral
-    pub i2c: I2C,
+    pub i2c: I2Cx,
     /// Underlying GPIO pins used by peripheral
     pub pins: PINS,
 }
@@ -33,9 +32,7 @@ i2c_pins!(I2C1, scl: [(gpioa::PA6, AF3)], sda: [(gpioa::PA7, AF3)],);
 i2c_pins!(I2C2, scl: [(gpioe::PE4, AF3)], sda: [(gpioe::PE5, AF3)],);
 i2c_pins!(I2C3, scl: [(gpiod::PD0, AF3)], sda: [(gpiod::PD1, AF3)],);
 
-i2c_hal! {
-    I2C0: (I2c0, i2c0),
-    I2C1: (I2c1, i2c1),
-    I2C2: (I2c2, i2c2),
-    I2C3: (I2c3, i2c3),
-}
+i2c_hal!(I2C0, I2c0);
+i2c_hal!(I2C1, I2c1);
+i2c_hal!(I2C2, I2c2);
+i2c_hal!(I2C3, I2c3);
