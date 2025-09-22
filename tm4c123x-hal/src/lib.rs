@@ -23,12 +23,8 @@
 #![allow(deprecated)]
 #![no_std]
 
-pub use tm4c123x::{self, CorePeripherals, Peripherals};
+pub use tm4c123x as pac;
 pub use tm4c_hal::{bb, delay, time};
-
-// Enable use of interrupt macro
-#[cfg(feature = "rt")]
-pub use crate::tm4c123x::interrupt;
 
 use eh0 as hal;
 

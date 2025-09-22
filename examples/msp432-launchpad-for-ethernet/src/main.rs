@@ -5,12 +5,13 @@ use panic_halt as _; // you can put a breakpoint on `rust_begin_unwind` to catch
 
 use core::fmt::Write;
 use cortex_m_rt::entry;
-use tm4c129x_hal::{self as hal, prelude::*};
+use tm4c129x_hal::{self as hal, pac, prelude::*};
+use embedded_hal::digital::OutputPin;
 
 #[entry]
 fn main() -> ! {
-    let cp = hal::CorePeripherals::take().unwrap();
-    let p = hal::Peripherals::take().unwrap();
+    let cp = pac::CorePeripherals::take().unwrap();
+    let p = pac::Peripherals::take().unwrap();
 
     let mut sc = p.SYSCTL.constrain();
     sc.clock_setup.oscillator = hal::sysctl::Oscillator::Main(
@@ -50,28 +51,28 @@ fn main() -> ! {
         writeln!(uart, "Hello, world! counter={}", counter).unwrap();
         let led_state = counter % 4;
         if led_state == 0 {
-            led1.set_high();
-            led2.set_low();
-            led3.set_low();
-            led4.set_low();
+            led1.set_high().unwrap();
+            led2.set_low().unwrap();
+            led3.set_low().unwrap();
+            led4.set_low().unwrap();
         }
         if led_state == 1 {
-            led1.set_low();
-            led2.set_high();
-            led3.set_low();
-            led4.set_low();
+            led1.set_low().unwrap();
+            led2.set_high().unwrap();
+            led3.set_low().unwrap();
+            led4.set_low().unwrap();
         }
         if led_state == 2 {
-            led1.set_low();
-            led2.set_low();
-            led3.set_high();
-            led4.set_low();
+            led1.set_low().unwrap();
+            led2.set_low().unwrap();
+            led3.set_high().unwrap();
+            led4.set_low().unwrap();
         }
         if led_state == 3 {
-            led1.set_low();
-            led2.set_low();
-            led3.set_low();
-            led4.set_high();
+            led1.set_low().unwrap();
+            led2.set_low().unwrap();
+            led3.set_low().unwrap();
+            led4.set_high().unwrap();
         }
 
         counter = counter.wrapping_add(1);

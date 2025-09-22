@@ -8,11 +8,11 @@ use cortex_m_rt::entry;
 use tm4c123x_hal::eeprom::{
     Blocks, Eeprom, EepromAddress, EepromError, Erase, Read, Write as EepromWrite,
 };
-use tm4c123x_hal::{self as hal, prelude::*};
+use tm4c123x_hal::{self as hal, pac, prelude::*};
 
 #[entry]
 fn main() -> ! {
-    let p = hal::Peripherals::take().unwrap();
+    let p = pac::Peripherals::take().unwrap();
 
     let mut sc = p.SYSCTL.constrain();
     sc.clock_setup.oscillator = hal::sysctl::Oscillator::Main(

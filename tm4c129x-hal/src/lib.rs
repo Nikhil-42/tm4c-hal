@@ -25,12 +25,8 @@
 #![deny(warnings)]
 #![allow(deprecated)]
 
-pub use tm4c129x::{self, CorePeripherals, Peripherals};
+pub use tm4c129x as pac;
 pub use tm4c_hal::{bb, delay, time};
-
-// Enable use of interrupt macro
-#[cfg(feature = "rt")]
-pub use crate::tm4c129x::interrupt;
 
 use sealed::Sealed;
 mod sealed {

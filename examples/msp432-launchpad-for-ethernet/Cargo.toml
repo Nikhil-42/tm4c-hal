@@ -24,6 +24,9 @@ panic-halt = "0.2.0"
 path = "../../tm4c129x-hal"
 features = ["rt"]
 
+[dependencies.embedded-hal]
+version = "1.0.0"
+
 # this lets you use `cargo fix`!
 [[bin]]
 name = "msp432-launchpad-for-ethernet"

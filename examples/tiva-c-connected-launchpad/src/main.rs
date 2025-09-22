@@ -5,11 +5,11 @@ use panic_halt as _; // you can put a breakpoint on `rust_begin_unwind` to catch
 
 use core::fmt::Write;
 use cortex_m_rt::entry;
-use tm4c129x_hal::{self as hal, prelude::*};
+use tm4c129x_hal::{self as hal, pac, prelude::*};
 
 #[entry]
 fn main() -> ! {
-    let p = hal::Peripherals::take().unwrap();
+    let p = pac::Peripherals::take().unwrap();
 
     let mut sc = p.SYSCTL.constrain();
     sc.clock_setup.oscillator = hal::sysctl::Oscillator::Main(
