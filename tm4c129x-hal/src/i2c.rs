@@ -7,7 +7,6 @@ use crate::{
     Sealed,
 };
 
-use cortex_m::asm::delay;
 use tm4c129x::{I2C0, I2C1, I2C2, I2C3};
 use embedded_hal::i2c::{ErrorKind, ErrorType, NoAcknowledgeSource, I2c, Operation, SevenBitAddress};
 
