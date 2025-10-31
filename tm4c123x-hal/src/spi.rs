@@ -1,6 +1,6 @@
 //! Serial Peripheral Interface (SPI) bus
 
-pub use crate::hal::spi::{Mode, MODE_0, MODE_1, MODE_2, MODE_3};
+pub use embedded_hal::spi::{Mode, MODE_0, MODE_1, MODE_2, MODE_3};
 
 use crate::{
     gpio::{
@@ -9,13 +9,13 @@ use crate::{
         gpiod::{PD0, PD2, PD3},
         AlternateFunction, OutputMode, AF1, AF2,
     },
-    hal::spi::{FullDuplex, Phase, Polarity},
     sysctl,
     sysctl::Clocks,
     time::Hertz,
     Sealed,
 };
 
+use embedded_hal::spi::{SpiBus, Polarity, Phase, ErrorType, ErrorKind};
 use tm4c123x::{SSI0, SSI1, SSI2, SSI3};
 
 /// SPI error
@@ -184,36 +184,110 @@ macro_rules! hal {
                 }
             }
 
-            impl<PINS> FullDuplex<u8> for Spi<$SPIX, PINS> {
-                type Error = Error;
-
-                fn read(&mut self) -> nb::Result<u8, Error> {
-                    // Receive FIFO Not Empty
-                    if self.spi.sr.read().rne().bit_is_clear() {
-                        Err(nb::Error::WouldBlock)
-                    } else {
-                        let r = self.spi.dr.read().data().bits() as u8;
-                        Ok(r)
-                    }
-                }
-
-                fn send(&mut self, byte: u8) -> nb::Result<(), Error> {
-                    // Transmit FIFO Not Full
-                    if self.spi.sr.read().tnf().bit_is_clear() {
-                        Err(nb::Error::WouldBlock)
-                    } else {
-                        self.spi.dr.write(|w| unsafe {
-                            w.data().bits(byte.into())
-                        });
-                        busy_wait!(self.spi, bsy, bit_is_clear);
-                        Ok(())
-                    }
-                }
+            impl<PINS> ErrorType for Spi<$SPIX, PINS> {
+                type Error = ErrorKind;
             }
 
-            impl<PINS> crate::hal::blocking::spi::transfer::Default<u8> for Spi<$SPIX, PINS> {}
+            impl<PINS> SpiBus<u8> for Spi<$SPIX, PINS> {
+                fn read(&mut self, words: &mut [u8]) -> Result<(), Self::Error> {
+                    for word in words.iter_mut() {
+                        busy_wait!(self.spi, tnf, bit_is_clear);
+                        self.spi.dr.write(|w| unsafe {
+                            w.data().bits(0xFF)
+                        }); // Send dummy byte
 
-            impl<PINS> crate::hal::blocking::spi::write::Default<u8> for Spi<$SPIX, PINS> {}
+                        // Wait for Receive FIFO Not Empty
+                        busy_wait!(self.spi, rne, bit_is_clear);
+
+                        // Read word
+                        *word = self.spi.dr.read().data().bits() as u8;
+                    }
+                    Ok(())
+                }
+
+                fn write(&mut self, bytes: &[u8]) -> Result<(), Self::Error> {
+                    for byte in bytes.iter() {
+                        // Wait for Transmit FIFO Not Full
+                        busy_wait!(self.spi, tnf, bit_is_clear);
+                        self.spi.dr.write(|w| unsafe {
+                            w.data().bits(*byte as u16)
+                        });
+
+                        busy_wait!(self.spi, rne, bit_is_clear);
+                        let _ = self.spi.dr.read().data().bits(); // Read and discard
+                    }
+                    Ok(())
+                }
+
+                fn transfer(&mut self, read: &mut [u8], write: &[u8]) -> Result<(), Self::Error> {
+                    let min_len = core::cmp::min(read.len(), write.len());
+                    for i in 0..min_len {
+                        let sword = &write[i];
+                        let rword = &mut read[i];
+
+                        // Wait for Transmit FIFO Not Full
+                        busy_wait!(self.spi, tnf, bit_is_clear);
+                        self.spi.dr.write(|w| unsafe {
+                            w.data().bits(*sword as u16)
+                        });
+
+                        // Wait for Receive FIFO Not Empty
+                        busy_wait!(self.spi, rne, bit_is_clear);
+                        // Read word
+                        *rword = self.spi.dr.read().data().bits() as u8;
+                    }
+
+                    for i in min_len..write.len() {
+                        let sword = &write[i];
+
+                        // Write remaining words
+                        busy_wait!(self.spi, tnf, bit_is_clear);
+                        self.spi.dr.write(|w| unsafe {
+                            w.data().bits(*sword as u16)
+                        });
+
+                        // Read and discard
+                        busy_wait!(self.spi, rne, bit_is_clear);
+                        let _ = self.spi.dr.read().data().bits();
+                    }
+
+                    for i in min_len..read.len() {
+                        let rword = &mut read[i];
+
+                        // Write dummy words
+                        busy_wait!(self.spi, tnf, bit_is_clear);
+                        self.spi.dr.write(|w| unsafe {
+                            w.data().bits(0xFF)
+                        });
+                        
+                        // Read remaining words
+                        busy_wait!(self.spi, rne, bit_is_clear);
+                        *rword = self.spi.dr.read().data().bits() as u8;
+                    }
+                    Ok(())
+                }
+
+                fn transfer_in_place(&mut self, words: &mut [u8]) -> Result<(), Self::Error> {
+                    for word in words.iter_mut() {
+                        // Wait for Transmit FIFO Not Full
+                        busy_wait!(self.spi, tnf, bit_is_clear);
+                        self.spi.dr.write(|w| unsafe {
+                            w.data().bits(*word as u16)
+                        });
+
+                        // Wait for Receive FIFO Not Empty
+                        busy_wait!(self.spi, rne, bit_is_clear);
+                        // Read word
+                        *word = self.spi.dr.read().data().bits() as u8;
+                    }
+                    Ok(())
+                }
+
+                fn flush(&mut self) -> Result<(), Self::Error> {
+                    busy_wait!(self.spi, bsy, bit_is_clear);
+                    Ok(())
+                }
+            }
         )+
     }
 }
