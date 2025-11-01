@@ -191,13 +191,13 @@ macro_rules! hal {
             impl<PINS> SpiBus<u8> for Spi<$SPIX, PINS> {
                 fn read(&mut self, words: &mut [u8]) -> Result<(), Self::Error> {
                     for word in words.iter_mut() {
-                        busy_wait!(self.spi, tnf, bit_is_clear);
+                        busy_wait!(self.spi, tnf, bit_is_set);
                         self.spi.dr.write(|w| unsafe {
                             w.data().bits(0xFF)
                         }); // Send dummy byte
 
                         // Wait for Receive FIFO Not Empty
-                        busy_wait!(self.spi, rne, bit_is_clear);
+                        busy_wait!(self.spi, rne, bit_is_set);
 
                         // Read word
                         *word = self.spi.dr.read().data().bits() as u8;
@@ -208,12 +208,12 @@ macro_rules! hal {
                 fn write(&mut self, bytes: &[u8]) -> Result<(), Self::Error> {
                     for byte in bytes.iter() {
                         // Wait for Transmit FIFO Not Full
-                        busy_wait!(self.spi, tnf, bit_is_clear);
+                        busy_wait!(self.spi, tnf, bit_is_set);
                         self.spi.dr.write(|w| unsafe {
                             w.data().bits(*byte as u16)
                         });
 
-                        busy_wait!(self.spi, rne, bit_is_clear);
+                        busy_wait!(self.spi, rne, bit_is_set);
                         let _ = self.spi.dr.read().data().bits(); // Read and discard
                     }
                     Ok(())
@@ -226,13 +226,13 @@ macro_rules! hal {
                         let rword = &mut read[i];
 
                         // Wait for Transmit FIFO Not Full
-                        busy_wait!(self.spi, tnf, bit_is_clear);
+                        busy_wait!(self.spi, tnf, bit_is_set);
                         self.spi.dr.write(|w| unsafe {
                             w.data().bits(*sword as u16)
                         });
 
                         // Wait for Receive FIFO Not Empty
-                        busy_wait!(self.spi, rne, bit_is_clear);
+                        busy_wait!(self.spi, rne, bit_is_set);
                         // Read word
                         *rword = self.spi.dr.read().data().bits() as u8;
                     }
@@ -241,13 +241,13 @@ macro_rules! hal {
                         let sword = &write[i];
 
                         // Write remaining words
-                        busy_wait!(self.spi, tnf, bit_is_clear);
+                        busy_wait!(self.spi, tnf, bit_is_set);
                         self.spi.dr.write(|w| unsafe {
                             w.data().bits(*sword as u16)
                         });
 
                         // Read and discard
-                        busy_wait!(self.spi, rne, bit_is_clear);
+                        busy_wait!(self.spi, rne, bit_is_set);
                         let _ = self.spi.dr.read().data().bits();
                     }
 
@@ -255,13 +255,13 @@ macro_rules! hal {
                         let rword = &mut read[i];
 
                         // Write dummy words
-                        busy_wait!(self.spi, tnf, bit_is_clear);
+                        busy_wait!(self.spi, tnf, bit_is_set);
                         self.spi.dr.write(|w| unsafe {
                             w.data().bits(0xFF)
                         });
                         
                         // Read remaining words
-                        busy_wait!(self.spi, rne, bit_is_clear);
+                        busy_wait!(self.spi, rne, bit_is_set);
                         *rword = self.spi.dr.read().data().bits() as u8;
                     }
                     Ok(())
@@ -270,13 +270,13 @@ macro_rules! hal {
                 fn transfer_in_place(&mut self, words: &mut [u8]) -> Result<(), Self::Error> {
                     for word in words.iter_mut() {
                         // Wait for Transmit FIFO Not Full
-                        busy_wait!(self.spi, tnf, bit_is_clear);
+                        busy_wait!(self.spi, tnf, bit_is_set);
                         self.spi.dr.write(|w| unsafe {
                             w.data().bits(*word as u16)
                         });
 
                         // Wait for Receive FIFO Not Empty
-                        busy_wait!(self.spi, rne, bit_is_clear);
+                        busy_wait!(self.spi, rne, bit_is_set);
                         // Read word
                         *word = self.spi.dr.read().data().bits() as u8;
                     }
