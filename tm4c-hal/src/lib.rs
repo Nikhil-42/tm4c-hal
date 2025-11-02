@@ -225,6 +225,7 @@ macro_rules! gpio_macro {
                         unsafe { bb::change_bit(&p.pur, $i, false); }
                         unsafe { bb::change_bit(&p.pdr, $i, false); }
                         unsafe { bb::change_bit(&p.den, $i, true); }
+                        unsafe { bb::change_bit(&p.amsel, $i, false)}
                         $PXi { _mode: PhantomData }
                     }
 
@@ -246,6 +247,7 @@ macro_rules! gpio_macro {
                         unsafe { bb::change_bit(&p.pur, $i, true); }
                         unsafe { bb::change_bit(&p.pdr, $i, false); }
                         unsafe { bb::change_bit(&p.den, $i, true); }
+                        unsafe { bb::change_bit(&p.amsel, $i, false)}
                         $PXi { _mode: PhantomData }
                     }
 
@@ -267,6 +269,7 @@ macro_rules! gpio_macro {
                         unsafe { bb::change_bit(&p.pur, $i, false); }
                         unsafe { bb::change_bit(&p.pdr, $i, true); }
                         unsafe { bb::change_bit(&p.den, $i, true); }
+                        unsafe { bb::change_bit(&p.amsel, $i, false)}
                         $PXi { _mode: PhantomData }
                     }
 
@@ -288,6 +291,7 @@ macro_rules! gpio_macro {
                         unsafe { bb::change_bit(&p.pur, $i, ODM::pup()); }
                         unsafe { bb::change_bit(&p.pdr, $i, false); }
                         unsafe { bb::change_bit(&p.den, $i, true); }
+                        unsafe { bb::change_bit(&p.amsel, $i, false)}
                         $PXi { _mode: PhantomData }
                     }
 
@@ -302,6 +306,7 @@ macro_rules! gpio_macro {
                         unsafe { bb::change_bit(&p.pur, $i, false); }
                         unsafe { bb::change_bit(&p.pdr, $i, false); }
                         unsafe { bb::change_bit(&p.den, $i, true); }
+                        unsafe { bb::change_bit(&p.amsel, $i, false)}
                         $PXi { _mode: PhantomData }
                     }
 
@@ -316,6 +321,7 @@ macro_rules! gpio_macro {
                         unsafe { bb::change_bit(&p.pur, $i, false); }
                         unsafe { bb::change_bit(&p.pdr, $i, true); }
                         unsafe { bb::change_bit(&p.den, $i, true); }
+                        unsafe { bb::change_bit(&p.amsel, $i, false)}
                         $PXi { _mode: PhantomData }
                     }
 
@@ -330,6 +336,7 @@ macro_rules! gpio_macro {
                         unsafe { bb::change_bit(&p.pur, $i, true); }
                         unsafe { bb::change_bit(&p.pdr, $i, false); }
                         unsafe { bb::change_bit(&p.den, $i, true); }
+                        unsafe { bb::change_bit(&p.amsel, $i, false)}
                         $PXi { _mode: PhantomData }
                     }
 
@@ -344,6 +351,7 @@ macro_rules! gpio_macro {
                         unsafe { bb::change_bit(&p.pur, $i, ODM::pup()); }
                         unsafe { bb::change_bit(&p.pdr, $i, false); }
                         unsafe { bb::change_bit(&p.den, $i, true); }
+                        unsafe { bb::change_bit(&p.amsel, $i, false)}
                         $PXi { _mode: PhantomData }
                     }
 
@@ -358,6 +366,7 @@ macro_rules! gpio_macro {
                         unsafe { bb::change_bit(&p.pur, $i, false); }
                         unsafe { bb::change_bit(&p.pdr, $i, false); }
                         unsafe { bb::change_bit(&p.den, $i, true); }
+                        unsafe { bb::change_bit(&p.amsel, $i, false)}
                         $PXi { _mode: PhantomData }
                     }
 
@@ -372,9 +381,19 @@ macro_rules! gpio_macro {
                         unsafe { bb::change_bit(&p.odr, $i, false); }
                         unsafe { bb::change_bit(&p.pur, $i, false); }
                         unsafe { bb::change_bit(&p.pdr, $i, false); }
+                        unsafe { bb::change_bit(&p.amsel, $i, false)}
                         $PXi { _mode: PhantomData }
                     }
 
+                    /// Configures the pin to operate as an analog pin
+                    pub fn into_analog(
+                        self
+                    ) -> $PXi<Analog<MODE>> {
+                        let p = unsafe { &*$GPIOX::ptr() };
+                        unsafe { bb::change_bit(&p. den, $i, false); }
+                        unsafe { bb::change_bit(&p.amsel, $i, true)}
+                        $PXi { _mode: PhantomData }
+                    }
                 }
 
                 impl<MODE> $PXi<MODE> {

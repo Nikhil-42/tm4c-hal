@@ -184,6 +184,12 @@ impl AlternateFunctionChoice for AF14 {
     }
 }
 
+/// Analog function (type state)
+pub struct Analog<MODE> {
+    _mode: PhantomData<MODE>,
+}
+impl<MODE: IsUnlocked> IsUnlocked for Analog<MODE> {}
+
 /// Pin is locked through the GPIOCR register
 pub struct Locked;
 
